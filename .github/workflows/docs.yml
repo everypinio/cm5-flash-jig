@@ -24,6 +24,11 @@ jobs:
         env:
           GOOGLE_ANALYTICS_KEY: ${{ vars.GOOGLE_ANALYTICS_KEY }}
           DISCORD_FEEDBACK_NOTE: ${{ vars.DISCORD_FEEDBACK_NOTE }}
+          LINK_DISCORD: ${{ vars.LINK_DISCORD }}
+          LINK_GITHUB: ${{ vars.LINK_GITHUB }}
+          LINK_LINKEDIN: ${{ vars.LINK_LINKEDIN }}
+          LINK_EMAIL: ${{ vars.LINK_EMAIL }}
+          COPYRIGHT_NOTE: ${{ vars.COPYRIGHT_NOTE }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

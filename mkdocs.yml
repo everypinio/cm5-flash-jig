@@ -66,3 +66,22 @@ extra:
           name: This page could be improved
           data: 0
           note: !ENV DISCORD_FEEDBACK_NOTE
+
+  social:
+    - icon: fontawesome/brands/discord
+      link: !ENV LINK_DISCORD
+      name: Everypin on Discord
+
+    - icon: fontawesome/brands/github
+      link: !ENV LINK_GITHUB
+      name: Everypin on GitHub
+
+    - icon: fontawesome/brands/linkedin
+      link: !ENV LINK_LINKEDIN
+      name: Everypin on LinkedIn
+
+    - icon: fontawesome/solid/at
+      link: !ENV LINK_EMAIL
+      name: Send us an email
+
+copyright: !ENV COPYRIGHT_NOTE
