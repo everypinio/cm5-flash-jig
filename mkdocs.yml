@@ -4,6 +4,8 @@ theme:
   name: material
   font:
     text: Golos Text
+  features:
+      - search.highlight
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
