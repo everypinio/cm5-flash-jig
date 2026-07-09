@@ -4,6 +4,8 @@ theme:
   name: material
   font:
     text: Golos Text
+  logo: img/everypin-logo.png
+  favicon: img/everypin-logo.png
   features:
       - search.highlight
   palette:
