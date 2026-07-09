@@ -2,3 +2,33 @@ site_name: CM5 Flash JIG
 site_url: https://everypinio.github.io/cm5-flash-jig
 theme:
   name: material
+  font:
+    text: Golos Text
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      primary: purple
+      accent: deep-purple
+      toggle:
+        icon: lucide/sun-moon
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: purple
+      accent: deep-purple
+      scheme: default
+      toggle:
+        icon: lucide/sun
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: purple
+      accent: deep-purple
+      scheme: slate
+      toggle:
+        icon: lucide/moon
+        name: Switch to system preference
+extra_css:
+  - stylesheets/extra.css
