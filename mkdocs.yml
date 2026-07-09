@@ -85,3 +85,7 @@ extra:
       name: Send us an email
 
 copyright: !ENV COPYRIGHT_NOTE
+
+plugins:
+  # the built site fails to display the search bar without the 'offline' plugin
+  - offline
