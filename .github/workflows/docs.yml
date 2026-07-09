@@ -21,6 +21,9 @@ jobs:
           python-version: 3.x
       - run: pip install zensical
       - run: zensical build --clean
+        env:
+          GOOGLE_ANALYTICS_KEY: ${{ vars.GOOGLE_ANALYTICS_KEY }}
+          DISCORD_FEEDBACK_NOTE: ${{ vars.DISCORD_FEEDBACK_NOTE }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
