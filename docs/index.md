@@ -1,11 +1,11 @@
 ---
-title: CM4/CM5 Flash Jig
+title: CM5 Flash Jig
 description: Customer documentation for a production jig that flashes Raspberry Pi Compute Module 5 modules through test points.
 ---
 
-# CM4/CM5 Flash Jig
+# CM5 Flash Jig
 
-The CM4/CM5 Flash Jig is a production fixture for flashing Raspberry Pi Compute Module 5 modules through board test points. It is designed for teams that need to program multiple modules reliably without repeatedly using the 100-pin mezzanine connectors, carrier boards, or fragile manual cabling.
+The CM5 Flash Jig is a production fixture for flashing Raspberry Pi Compute Module 5 modules through board test points. It is designed for teams that need to program multiple modules reliably without repeatedly using the 100-pin mezzanine connectors, carrier boards, or fragile manual cabling.
 
 The jig combines mechanical alignment, pogo-pin contact, controlled power, USB boot handling, status indication, and automated flashing into one repeatable operator workflow.
 
@@ -87,7 +87,6 @@ For normal operation, the front-panel display provides the required operator gui
 | Module | Status | Notes |
 | --- | --- | --- |
 | Raspberry Pi Compute Module 5 with eMMC | Supported target | The jig is designed around the CM5 test points used for power, USB boot, UART, and status signals. |
-| Raspberry Pi Compute Module 4 with eMMC | Validation pending | The relevant test points appear to be in compatible positions, but full CM4 compatibility must be confirmed by testing before it is treated as supported. |
 
 ## Safety Notes
 
