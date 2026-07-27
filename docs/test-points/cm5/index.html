@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raspberry Pi CM5 — interactive test points</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: dark; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; background: #0b1020; color: #f8fafc; }
+    body { margin: 0; background: #0b1020; }
+    header { position: sticky; top: 0; z-index: 20; padding: 14px 18px; border-bottom: 1px solid #334155; background: #0f172a; }
+    h1 { margin: 0 0 10px; font-size: 18px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    input, button, select { padding: 9px 12px; border: 1px solid #475569; border-radius: 10px; background: #020617; color: #f8fafc; }
+    button { cursor: pointer; background: #1e293b; }
+    button.active { background: #475569; }
+    .wrap { padding: 16px; }
+    .stage-outer { overflow: auto; padding: 18px; border: 1px solid #334155; border-radius: 14px; background: #020617; box-shadow: 0 10px 35px #0008; }
+    .stage { --board-width: 660px; display: flex; align-items: flex-start; gap: 28px; width: max-content; min-width: 100%; }
+    .board-shell { width: var(--board-width); }
+    .board-title { display: inline-block; margin: 0 0 10px; padding: 5px 8px; border: 1px solid #ffffff33; border-radius: 10px; background: #0f172add; font-size: 12px; font-weight: 700; }
+    .board-view { position: relative; width: 100%; aspect-ratio: 55 / 40; border: 2px dashed rgba(255, 255, 255, .45); border-radius: 22px; }
+    .board-view img { display: block; width: 100%; height: 100%; border-radius: 20px; object-fit: fill; user-select: none; pointer-events: none; }
+    .marker { position: absolute; z-index: 3; width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px #0009, 0 0 12px #000b; cursor: pointer; transition: transform .1s; }
+    .marker:hover, .marker.selected { z-index: 10; transform: scale(1.55); }
+    .label { position: absolute; top: -8px; left: 11px; padding: 4px 6px; border: 1px solid #ffffff33; border-radius: 7px; background: #0f172aee; color: #fff; font-size: 11px; line-height: 1.15; white-space: nowrap; opacity: 0; pointer-events: none; }
+    .marker:hover .label, .marker.selected .label, .show-labels .marker .label { opacity: 1; }
+    .cat-Mounting { background: #a3a3a3; }
+    .cat-GND { background: #38bdf8; }
+    .cat-Power-sense { background: #facc15; }
+    .cat-Control-debug { background: #c084fc; }
+    .cat-JTAG { background: #fb7185; }
+    .cat-USB-C { background: #34d399; }
+    .cat-Ethernet { background: #f97316; }
+    .cat-Reset { background: #f472b6; }
+    .cat-Reserved { background: #94a3b8; opacity: .55; }
+    .hidden { display: none !important; }
+    .info { display: grid; grid-template-columns: minmax(280px, 460px) 1fr; gap: 12px; margin-top: 12px; }
+    .card { padding: 13px 14px; border: 1px solid #ffffff22; border-radius: 14px; background: #111827eb; }
+    .card h2 { margin: 0 0 8px; font-size: 15px; }
+    .kv { display: grid; grid-template-columns: 120px 1fr; gap: 5px 10px; color: #cbd5e1; font-size: 13px; }
+    .kv b { color: #fff; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid #ffffff26; border-radius: 999px; background: #ffffff10; }
+    .dot { display: inline-block; width: 10px; height: 10px; border: 1px solid #fff; border-radius: 50%; }
+    .note { margin-top: 9px; color: #cbd5e1; font-size: 12px; line-height: 1.4; }
+    @media (max-width: 850px) { .info { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Raspberry Pi Compute Module 5 — interactive test points map, front + back</h1>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search: TP65, GND, ETH, UART…">
+      <select id="sideFilter">
+        <option value="both">Both sides</option>
+        <option value="front">Front / top only</option>
+        <option value="back">Back / bottom only</option>
+      </select>
+      <button id="toggleReserved" class="active">Hide reserved</button>
+      <button id="toggleLabels">Show all labels</button>
+      <button id="zoomOut" aria-label="Zoom out">−</button>
+      <button id="zoomIn" aria-label="Zoom in">+</button>
+      <button id="zoomReset">100%</button>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="stage-outer">
+      <div class="stage" id="stage">
+        <section class="board-shell board-front" data-side="front">
+          <div class="board-title">Front / top side</div>
+          <div class="board-view" id="frontBoard">
+            <img src="img/cm5_top.png" alt="Raspberry Pi Compute Module 5 top side">
+          </div>
+        </section>
+        <section class="board-shell board-back" data-side="back">
+          <div class="board-title">Back / bottom side, X mirrored</div>
+          <div class="board-view" id="backBoard">
+            <img src="img/cm5_bottom.png" alt="Raspberry Pi Compute Module 5 bottom side">
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="info">
+      <section class="card">
+        <h2 id="detailsTitle">Click or hover a point</h2>
+        <div class="kv">
+          <span>Side</span><b id="dSide">—</b>
+          <span>Reference</span><b id="dRef">—</b>
+          <span>Name</span><b id="dName">—</b>
+          <span>Group</span><b id="dCat">—</b>
+          <span>Table X / Y</span><b id="dXY">—</b>
+          <span>Displayed X</span><b id="dDisplayX">—</b>
+        </div>
+        <div class="note">Front/top uses the table X directly. Back/bottom mirrors X as <b>55 − X</b>, so the displayed bottom-side origin is at the lower-right corner.</div>
+      </section>
+      <section class="card">
+        <h2>Legend</h2>
+        <div class="legend" id="legend"></div>
+        <div class="note">Search examples: <b>ETH</b>, <b>SOC_T</b>, <b>USBC</b>, <b>DEBUG</b>, <b>GND</b>. The same test-point list is drawn on both board images, with X mirrored only on the back/bottom side.</div>
+      </section>
+    </div>
+  </main>
+  <script>
+    const points = [
+      { ref: "MH4", x_mm: 51.5, y_mm: 36.5, name: "Mounting Hole", cat: "Mounting" },
+      { ref: "MH3", x_mm: 3.5, y_mm: 36.5, name: "Mounting Hole", cat: "Mounting" },
+      { ref: "MH2", x_mm: 51.5, y_mm: 3.5, name: "Mounting Hole", cat: "Mounting" },
+      { ref: "MH1", x_mm: 3.5, y_mm: 3.5, name: "Mounting Hole", cat: "Mounting" },
+      { ref: "TP1", x_mm: 14.34, y_mm: 17.54, name: "5 V", cat: "Power / sense" },
+      { ref: "TP2", x_mm: 8.8, y_mm: 1.3, name: "RUN", cat: "Control / debug" },
+      { ref: "TP3", x_mm: 51.2, y_mm: 32.6, name: "GND", cat: "GND" },
+      { ref: "TP4", x_mm: 4.8, y_mm: 13.0, name: "reserved", cat: "Reserved" },
+      { ref: "TP7", x_mm: 24.2, y_mm: 7.5, name: "GND", cat: "GND" },
+      { ref: "TP8", x_mm: 1.65, y_mm: 15.05, name: "GND", cat: "GND" },
+      { ref: "TP9", x_mm: 1.5, y_mm: 10.5, name: "reserved", cat: "Reserved" },
+      { ref: "TP10", x_mm: 48.4, y_mm: 15.1, name: "reserved", cat: "Reserved" },
+      { ref: "TP13", x_mm: 42.6, y_mm: 7.3, name: "GND", cat: "GND" },
+      { ref: "TP15", x_mm: 14.7, y_mm: 6.6, name: "reserved", cat: "Reserved" },
+      { ref: "TP16", x_mm: 9.3, y_mm: 34.9, name: "nRPIBOOT", cat: "Control / debug" },
+      { ref: "TP17", x_mm: 37.4, y_mm: 8.1, name: "reserved", cat: "Reserved" },
+      { ref: "TP18", x_mm: 23.4, y_mm: 23.55, name: "reserved", cat: "Reserved" },
+      { ref: "TP21", x_mm: 24.5125, y_mm: 14.025, name: "nRESET_OUT", cat: "Reset" },
+      { ref: "TP22", x_mm: 13.0875, y_mm: 11.225, name: "reserved", cat: "Reserved" },
+      { ref: "TP26", x_mm: 17.7, y_mm: 20.2, name: "GND", cat: "GND" },
+      { ref: "TP27", x_mm: 43.6, y_mm: 22.3, name: "reserved", cat: "Reserved" },
+      { ref: "TP28", x_mm: 15.4, y_mm: 16.0, name: "reserved", cat: "Reserved" },
+      { ref: "TP29", x_mm: 23.65, y_mm: 21.55, name: "reserved", cat: "Reserved" },
+      { ref: "TP30", x_mm: 37.2, y_mm: 34.9, name: "reserved", cat: "Reserved" },
+      { ref: "TP31", x_mm: 9.1, y_mm: 3.2, name: "reserved", cat: "Reserved" },
+      { ref: "TP32", x_mm: 1.5, y_mm: 13.0, name: "reserved", cat: "Reserved" },
+      { ref: "TP33", x_mm: 47.0, y_mm: 36.0, name: "CM5_3V3", cat: "Power / sense" },
+      { ref: "TP34", x_mm: 50.5, y_mm: 15.5, name: "CM5_1V8", cat: "Power / sense" },
+      { ref: "TP35", x_mm: 11.0, y_mm: 37.8, name: "DEBUG_UART_TX", cat: "Control / debug" },
+      { ref: "TP36", x_mm: 8.5, y_mm: 37.1, name: "DEBUG_UART_RX", cat: "Control / debug" },
+      { ref: "TP39", x_mm: 22.1, y_mm: 6.1, name: "reserved", cat: "Reserved" },
+      { ref: "TP40", x_mm: 6.7, y_mm: 15.2, name: "reserved", cat: "Reserved" },
+      { ref: "TP41", x_mm: 8.7, y_mm: 15.3, name: "reserved", cat: "Reserved" },
+      { ref: "TP42", x_mm: 11.4, y_mm: 34.9, name: "PWR_BUT", cat: "Control / debug" },
+      { ref: "TP44", x_mm: 51.7, y_mm: 30.2, name: "reserved", cat: "Reserved" },
+      { ref: "TP45", x_mm: 53.1, y_mm: 28.7, name: "reserved", cat: "Reserved" },
+      { ref: "TP46", x_mm: 7.0, y_mm: 34.7, name: "GND", cat: "GND" },
+      { ref: "TP48", x_mm: 21.6, y_mm: 15.4, name: "SOC_TRST_N", cat: "JTAG" },
+      { ref: "TP49", x_mm: 21.6, y_mm: 13.3, name: "SOC_TDI", cat: "JTAG" },
+      { ref: "TP50", x_mm: 20.4, y_mm: 17.2, name: "SOC_TDO", cat: "JTAG" },
+      { ref: "TP51", x_mm: 20.3, y_mm: 8.8, name: "SOC_TMS", cat: "JTAG" },
+      { ref: "TP52", x_mm: 19.9, y_mm: 11.9, name: "SOC_TCK", cat: "JTAG" },
+      { ref: "TP57", x_mm: 53.2, y_mm: 32.0, name: "reserved", cat: "Reserved" },
+      { ref: "TP60", x_mm: 48.0, y_mm: 38.7, name: "GND", cat: "GND" },
+      { ref: "TP61", x_mm: 6.575, y_mm: 1.225, name: "GND", cat: "GND" },
+      { ref: "TP62", x_mm: 22.2, y_mm: 31.6, name: "GND", cat: "GND" },
+      { ref: "TP63", x_mm: 8.7, y_mm: 18.2, name: "5v_Sense", cat: "Power / sense" },
+      { ref: "TP64", x_mm: 47.3, y_mm: 5.4, name: "reserved", cat: "Reserved" },
+      { ref: "TP65", x_mm: 28.2, y_mm: 7.5, name: "USBC_D_N", cat: "USB-C" },
+      { ref: "TP66", x_mm: 26.1, y_mm: 7.5, name: "USBC_D_P", cat: "USB-C" },
+      { ref: "TP67", x_mm: 7.0, y_mm: 38.6, name: "LED_nPWR", cat: "Control / debug" },
+      { ref: "TP68", x_mm: 13.0, y_mm: 37.5, name: "LED_nACT", cat: "Control / debug" },
+      { ref: "TP69", x_mm: 38.8, y_mm: 25.9, name: "ETH0_P", cat: "Ethernet" },
+      { ref: "TP70", x_mm: 39.6, y_mm: 24.2, name: "ETH0_N", cat: "Ethernet" },
+      { ref: "TP71", x_mm: 43.8, y_mm: 14.1, name: "ETH1_N", cat: "Ethernet" },
+      { ref: "TP72", x_mm: 45.6, y_mm: 13.1, name: "ETH1_P", cat: "Ethernet" },
+      { ref: "TP73", x_mm: 42.4, y_mm: 31.7, name: "ETH2_P", cat: "Ethernet" },
+      { ref: "TP74", x_mm: 42.6, y_mm: 33.7, name: "ETH2_N", cat: "Ethernet" },
+      { ref: "TP75", x_mm: 41.6, y_mm: 37.8, name: "ETH3_P", cat: "Ethernet" },
+      { ref: "TP76", x_mm: 42.9, y_mm: 36.1, name: "ETH3_N", cat: "Ethernet" },
+      { ref: "TP77", x_mm: 45.0, y_mm: 37.0, name: "GPIO_VREF", cat: "Power / sense" },
+      { ref: "TP78", x_mm: 14.37, y_mm: 19.52, name: "5 V", cat: "Power / sense" }
+    ];
+    const cal = {
+      front: { label: "Front / top side", mirror_x: false, element: frontBoard },
+      back: { label: "Back / bottom side, X mirrored", mirror_x: true, element: backBoard },
+      board_w_mm: 55,
+      board_h_mm: 40
+    };
+    let hideReserved = true;
+    let showLabels = false;
+    let zoom = 1;
+
+    function cssClass(category) {
+      return "cat-" + category.replaceAll(" / ", "-").replaceAll(" ", "-");
+    }
+
+    function toPercent(point, side) {
+      const displayX = cal[side].mirror_x ? cal.board_w_mm - point.x_mm : point.x_mm;
+      return {
+        left: displayX / cal.board_w_mm * 100,
+        top: (cal.board_h_mm - point.y_mm) / cal.board_h_mm * 100,
+        displayX
+      };
+    }
+
+    function setDetails(point, side, displayX) {
+      detailsTitle.textContent = `${point.ref} — ${point.name}`;
+      dSide.textContent = cal[side].label;
+      dRef.textContent = point.ref;
+      dName.textContent = point.name;
+      dCat.textContent = point.cat;
+      dXY.textContent = `${point.x_mm} mm / ${point.y_mm} mm`;
+      dDisplayX.textContent = side === "back"
+        ? `${displayX.toFixed(3)} mm = 55 − ${point.x_mm}`
+        : `${displayX.toFixed(3)} mm`;
+    }
+
+    function renderPoints() {
+      ["front", "back"].forEach(side => {
+        points.forEach(point => {
+          const position = toPercent(point, side);
+          const marker = document.createElement("div");
+          marker.className = `marker ${cssClass(point.cat)}`;
+          marker.dataset.side = side;
+          marker.dataset.ref = point.ref;
+          marker.dataset.name = point.name;
+          marker.dataset.cat = point.cat;
+          marker.style.left = `${position.left}%`;
+          marker.style.top = `${position.top}%`;
+          marker.title = `${side}: ${point.ref} — ${point.name}`;
+          marker.innerHTML = `<span class="label">${point.ref}<br>${point.name}</span>`;
+          marker.addEventListener("mouseenter", () => setDetails(point, side, position.displayX));
+          marker.addEventListener("click", event => {
+            document.querySelectorAll(".marker.selected").forEach(item => item.classList.remove("selected"));
+            marker.classList.add("selected");
+            setDetails(point, side, position.displayX);
+            event.stopPropagation();
+          });
+          cal[side].element.appendChild(marker);
+        });
+      });
+    }
+
+    function applyFilters() {
+      const query = search.value.trim().toLowerCase();
+      const selectedSide = sideFilter.value;
+      document.querySelectorAll(".board-shell").forEach(board => {
+        board.classList.toggle("hidden", selectedSide !== "both" && board.dataset.side !== selectedSide);
+      });
+      document.querySelectorAll(".marker").forEach(marker => {
+        const text = `${marker.dataset.ref} ${marker.dataset.name} ${marker.dataset.cat} ${marker.dataset.side}`.toLowerCase();
+        marker.classList.toggle("hidden", (hideReserved && marker.dataset.cat === "Reserved") || (query && !text.includes(query)));
+      });
+    }
+
+    function renderLegend() {
+      [...new Set(points.map(point => point.cat))].forEach(category => {
+        const item = document.createElement("span");
+        item.className = "chip";
+        item.innerHTML = `<span class="dot ${cssClass(category)}"></span>${category}`;
+        legend.appendChild(item);
+      });
+    }
+
+    function setZoom(nextZoom) {
+      zoom = Math.max(.5, Math.min(2, nextZoom));
+      stage.style.setProperty("--board-width", `${660 * zoom}px`);
+      zoomReset.textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    search.addEventListener("input", applyFilters);
+    sideFilter.addEventListener("change", applyFilters);
+    toggleReserved.addEventListener("click", () => {
+      hideReserved = !hideReserved;
+      toggleReserved.classList.toggle("active", hideReserved);
+      toggleReserved.textContent = hideReserved ? "Hide reserved" : "Show reserved";
+      applyFilters();
+    });
+    toggleLabels.addEventListener("click", () => {
+      showLabels = !showLabels;
+      stage.classList.toggle("show-labels", showLabels);
+      toggleLabels.classList.toggle("active", showLabels);
+      toggleLabels.textContent = showLabels ? "Hide all labels" : "Show all labels";
+    });
+    zoomOut.addEventListener("click", () => setZoom(zoom - .1));
+    zoomIn.addEventListener("click", () => setZoom(zoom + .1));
+    zoomReset.addEventListener("click", () => setZoom(1));
+    stage.addEventListener("click", () => {
+      document.querySelectorAll(".marker.selected").forEach(marker => marker.classList.remove("selected"));
+    });
+
+    renderPoints();
+    renderLegend();
+    applyFilters();
+  </script>
+</body>
+</html>
