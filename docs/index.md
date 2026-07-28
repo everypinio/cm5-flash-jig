@@ -87,7 +87,7 @@ For normal operation, the front-panel display provides the required operator gui
 | Module | Status | Notes |
 | --- | --- | --- |
 | Raspberry Pi Compute Module 5 with eMMC | Supported target | The jig is designed around the CM5 test points used for power, USB boot, UART, and status signals. [Open the interactive CM5 test-point map](test-points/cm5/). |
-| Raspberry Pi Compute Module 4 with eMMC | Validation pending | The relevant test points appear to be in compatible positions, but full CM4 compatibility must be confirmed by testing. [Open the interactive CM4 test-point map](test-points/cm4/). |
+| Raspberry Pi Compute Module 4 with eMMC | Validation pending | The available CM4 test points do not appear to expose the 5 V power, USB, UART, or boot signals required by the jig, so flashing through these points is unlikely to be possible. [Open the interactive CM4 test-point map](test-points/cm4/). |
 
 ## Safety Notes
 

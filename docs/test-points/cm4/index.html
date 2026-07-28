@@ -26,7 +26,8 @@
     .label { position: absolute; top: -8px; left: 11px; padding: 4px 6px; border: 1px solid #ffffff33; border-radius: 7px; background: #0f172aee; color: #fff; font-size: 11px; line-height: 1.15; white-space: nowrap; opacity: 0; pointer-events: none; }
     .marker:hover .label, .marker.selected .label, .show-labels .marker .label { opacity: 1; }
     .cat-Mounting { background: #a3a3a3; }
-    .cat-Test-point { background: #facc15; }
+    .cat-Power { background: #ef4444; }
+    .cat-Unknown { background: #facc15; }
     .hidden { display: none !important; }
     .info { display: grid; grid-template-columns: minmax(280px, 460px) 1fr; gap: 12px; margin-top: 12px; }
     .card { padding: 13px 14px; border: 1px solid #ffffff22; border-radius: 14px; background: #111827eb; }
@@ -44,7 +45,7 @@
   <header>
     <h1>Raspberry Pi Compute Module 4 — interactive test points map, front + back</h1>
     <div class="toolbar">
-      <input id="search" type="search" placeholder="Search: TP8, TP15, mounting…">
+      <input id="search" type="search" placeholder="Search: TPx1, TP11, GND, Power…">
       <select id="sideFilter">
         <option value="both">Both sides</option>
         <option value="front">Front / top only</option>
@@ -84,29 +85,37 @@
           <span>Approx. X / Y</span><b id="dXY">—</b>
           <span>Displayed X</span><b id="dDisplayX">—</b>
         </div>
-        <div class="note">Coordinates are approximated from the CM4 photographs. Back/bottom X is mirrored as <b>55 − X</b>.</div>
+        <div class="note">Test-point positions are approximate and were measured manually. Test points may move between CM4 board revisions; TP11 is one known example.</div>
       </section>
       <section class="card">
         <h2>Legend</h2>
         <div class="legend" id="legend"></div>
-        <div class="note">The CM4 datasheet does not publish a test-point coordinate table. Only references visible on the bottom-side silkscreen are marked; signal assignments are intentionally not inferred.</div>
+        <div class="note">The CM4 <a href="https://pip-assets.raspberrypi.com/categories/634-raspberry-pi-compute-module-4/documents/RP-008168-DS-4-cm4-datasheet.pdf" target="_blank" rel="noopener noreferrer">datasheet</a> does not publish a test-point coordinate table.</div>
+        <div class="note">Signal assignments were verified manually. The available test points appear not to expose 5 V board power, USB, Ethernet, UART, or BOOT. Therefore, powering and flashing the board through these points is unlikely to be possible.</div>
       </section>
     </div>
   </main>
   <script>
     const points = [
-      { ref: "MH4", x_mm: 51.5, y_mm: 36.5, name: "Mounting hole", cat: "Mounting", sides: ["front", "back"] },
-      { ref: "MH3", x_mm: 3.5, y_mm: 36.5, name: "Mounting hole", cat: "Mounting", sides: ["front", "back"] },
-      { ref: "MH2", x_mm: 51.5, y_mm: 3.5, name: "Mounting hole", cat: "Mounting", sides: ["front", "back"] },
-      { ref: "MH1", x_mm: 3.5, y_mm: 3.5, name: "Mounting hole", cat: "Mounting", sides: ["front", "back"] },
-      { ref: "TP8", x_mm: 8.33, y_mm: 4.79, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP9", x_mm: 40.78, y_mm: 3.11, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP11", x_mm: 2.81, y_mm: 17.00, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP12", x_mm: 10.88, y_mm: 10.56, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP13", x_mm: 40.93, y_mm: 5.17, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP14", x_mm: 45.73, y_mm: 5.06, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP15", x_mm: 18.56, y_mm: 18.58, name: "Silkscreened pad", cat: "Test point", sides: ["back"] },
-      { ref: "TP34", x_mm: 38.08, y_mm: 3.07, name: "Silkscreened pad", cat: "Test point", sides: ["back"] }
+      { ref: "MH4", x_mm: 51.5, y_mm: 36.5, name: "Mounting Hole", cat: "Mounting", sides: ["front", "back"] },
+      { ref: "MH3", x_mm: 3.5, y_mm: 36.5, name: "Mounting Hole", cat: "Mounting", sides: ["front", "back"] },
+      { ref: "MH2", x_mm: 51.5, y_mm: 3.5, name: "Mounting Hole", cat: "Mounting", sides: ["front", "back"] },
+      { ref: "MH1", x_mm: 3.5, y_mm: 3.5, name: "Mounting Hole", cat: "Mounting", sides: ["front", "back"] },
+      { ref: "TPx1", x_mm: 7.8, y_mm: 35.3, name: "SMD 2,2mm test pad", cat: "Unknown", sides: ["back"] },
+      { ref: "TPx2", x_mm: 2.7, y_mm: 31, name: "GND", cat: "Power", sides: ["back"] },
+      { ref: "TPx3", x_mm: 35.6, y_mm: 29.3, name: "SMD 2,2mm test pad", cat: "Unknown", sides: ["back"] },
+      { ref: "TPx4", x_mm: 37.5, y_mm: 28.4, name: "SMD 2,2mm test pad", cat: "Unknown", sides: ["back"] },
+      { ref: "TPx5", x_mm: 40, y_mm: 28, name: "SMD 2,2mm test pad", cat: "Unknown", sides: ["back"] },
+      { ref: "TPx6", x_mm: 44.2, y_mm: 26.7, name: "GND", cat: "Power", sides: ["back"] },
+      { ref: "TPx7", x_mm: 34.5, y_mm: 25.8, name: "SMD 2,2mm test pad", cat: "Unknown", sides: ["back"] },
+      { ref: "TP8", x_mm: 8.5, y_mm: 5, name: "GND", cat: "Power", sides: ["back"] },
+      { ref: "TP9", x_mm: 40.8, y_mm: 2.2, name: "GND", cat: "Power", sides: ["back"] },
+      { ref: "TP11", x_mm: 51, y_mm: 29, name: "CM4_3.3V (Output)", cat: "Power", sides: ["back"] },
+      { ref: "TP12", x_mm: 11, y_mm: 10.4, name: "GND", cat: "Power", sides: ["back"] },
+      { ref: "TP13", x_mm: 40.8, y_mm: 4.8, name: "CM4_1.8V (Output)", cat: "Power", sides: ["back"] },
+      { ref: "TP14", x_mm: 45.5, y_mm: 5.3, name: "LV power (1.1V?)", cat: "Power", sides: ["back"] },
+      { ref: "TP15", x_mm: 18.4, y_mm: 18.4, name: "LV power", cat: "Power", sides: ["back"] },
+      { ref: "TP34", x_mm: 37.9, y_mm: 3.5, name: "LV power", cat: "Power", sides: ["back"] }
     ];
     const cal = {
       front: { label: "Front / top side", mirror_x: false, element: frontBoard },
