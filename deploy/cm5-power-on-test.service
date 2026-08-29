@@ -1,0 +1,19 @@
+[Unit]
+Description=CM5 power-on HardPy test
+Wants=cm5-couchdb.service
+ConditionPathExists=/home/raspberrypi/cm4_5_flasher/testplans/power_on
+
+[Service]
+Type=simple
+User=raspberrypi
+WorkingDirectory=/home/raspberrypi/cm4_5_flasher
+RuntimeDirectory=cm5-power-on-test
+RuntimeDirectoryMode=0750
+ExecStart=/usr/bin/flock -n /run/cm5-power-on-test/test.lock /home/raspberrypi/cm4_5_flasher/.venv/bin/python scripts/hardpy_startup_controller.py
+EnvironmentFile=-/home/raspberrypi/cm4_5_flasher/.env
+TimeoutStartSec=30min
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

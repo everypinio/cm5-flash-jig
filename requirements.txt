@@ -1,0 +1,9 @@
+pytest
+pyvisa
+smbus2
+hardpy
+pydantic-settings
+gpiozero
+lgpio
+pyvisa-py
+pillow
