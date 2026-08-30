@@ -43,6 +43,7 @@ class PowerOnMetadataTests(unittest.TestCase):
             POWER_ON_HARDPY_DUT_SERIAL_NUMBER="station-42",
             POWER_ON_HARDPY_BATCH_SERIAL_NUMBER="POWER-ON-SELFTEST",
             POWER_ON_HARDPY_STAND_NAME="CM5 flasher",
+            HARDPY_STAND_LOCATION="ESPOO",
         )
 
         set_power_on_hardpy_metadata(
@@ -61,6 +62,7 @@ class PowerOnMetadataTests(unittest.TestCase):
                 call.set_dut_serial_number("station-42"),
                 call.set_batch_serial_number("POWER-ON-SELFTEST"),
                 call.set_stand_name("CM5 flasher"),
+                call.set_stand_location("ESPOO"),
             ],
         )
 

@@ -31,7 +31,7 @@ from tests.lib.utils.cm5_boot_info import (
 from tests.lib.utils.dut_presence import wait_for_dut_present
 
 pytestmark = [
-    pytest.mark.module_name("4. CM5 - Boot Verification"),
+    pytest.mark.module_name("3. CM5 - Boot Verification"),
     pytest.mark.critical,
     pytest.mark.hold_power_for_module,
 ]
@@ -109,7 +109,7 @@ UART_BOOT_LOG_3: str | None = None
 SAW_LOGIN: bool = False
 FATAL_MATCHES: list[str] = []
 
-@pytest.mark.case_name("4.1. Execute normal boot")
+@pytest.mark.case_name("3.1. Execute normal boot")
 def test_execute_normal_boot(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
 ) -> None:
@@ -182,7 +182,7 @@ def test_execute_normal_boot(
             os.close(uart_fd)
 
 
-@pytest.mark.case_name("4.2. Measure post-boot power")
+@pytest.mark.case_name("3.2. Measure post-boot power")
 def test_measure_post_boot_power(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, power_block
 ) -> None:
@@ -211,7 +211,7 @@ def test_measure_post_boot_power(
         raise
 
 
-@pytest.mark.case_name("4.3. Verify LED activity")
+@pytest.mark.case_name("3.3. Verify LED activity")
 def test_verify_led_activity(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
 ) -> None:
@@ -265,7 +265,7 @@ def test_verify_led_activity(
         raise
 
 
-@pytest.mark.case_name("4.4. Analyze boot logs")
+@pytest.mark.case_name("3.4. Analyze boot logs")
 def test_analyze_boot_log(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, power_block
 ) -> None:

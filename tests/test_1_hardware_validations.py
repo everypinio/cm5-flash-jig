@@ -22,7 +22,7 @@ POWER_LINE_SPECS = (
 )
 
 pytestmark = [
-    pytest.mark.module_name("2. Hardware Validations"),
+    pytest.mark.module_name("1. Hardware Validations"),
     pytest.mark.critical,
 ]
 
@@ -41,7 +41,7 @@ def _record_powerblock_query(
     set_measurement(request, f"PowerBlock {command}", response)
     return response
 
-@pytest.mark.case_name("2.3. Verify DUT installation")
+@pytest.mark.case_name("1.1. Verify DUT installation")
 def test_verify_dut_installation(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
 ) -> None:
@@ -68,7 +68,7 @@ def test_verify_dut_installation(
     set_measurement(request, "DUT_PRESENT before test", "LOW")
     display_panel.terminal_log("DUT_PRESENT LOW")
 
-@pytest.mark.case_name("2.4. Measure DUT power rails")
+@pytest.mark.case_name("1.2. Measure DUT power rails")
 def test_measure_dut_power_rails(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block, adc_reader
 ) -> None:

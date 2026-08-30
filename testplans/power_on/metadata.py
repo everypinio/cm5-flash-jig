@@ -55,3 +55,4 @@ def set_power_on_hardpy_metadata(
         settings.POWER_ON_HARDPY_BATCH_SERIAL_NUMBER
     )
     hardpy_module.set_stand_name(settings.POWER_ON_HARDPY_STAND_NAME)
+    hardpy_module.set_stand_location(settings.HARDPY_STAND_LOCATION)

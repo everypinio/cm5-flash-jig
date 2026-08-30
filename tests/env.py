@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     HARDPY_DUT_NAME: str
     HARDPY_DUT_TYPE: str
     HARDPY_STAND_NAME: str
+    HARDPY_STAND_LOCATION: str
     POWER_ON_HARDPY_USER_NAME: str
     POWER_ON_HARDPY_DUT_NAME: str
     POWER_ON_HARDPY_DUT_TYPE: str

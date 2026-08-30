@@ -31,7 +31,7 @@ from tests.lib.utils.uart_log_capture import UartLogCapture
 from tests.utils import image_path
 
 pytestmark = [
-    pytest.mark.module_name("3. CM5 - Flashing"),
+    pytest.mark.module_name("2. CM5 - Flashing"),
     pytest.mark.critical,
     pytest.mark.hold_power_for_module,
 ]
@@ -177,7 +177,7 @@ def _record_usb_boot_log(
     return log_path, boot_info, variant_info
 
 
-@pytest.mark.case_name("3.1. Execute USB boot")
+@pytest.mark.case_name("2.1. Execute USB boot")
 def test_usb_boot_execution(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
 ) -> None:
@@ -350,7 +350,7 @@ def test_usb_boot_execution(
             uart_capture.stop()
 
 
-@pytest.mark.case_name("3.2. Analyze USB boot logs")
+@pytest.mark.case_name("2.2. Analyze USB boot logs")
 def test_usb_boot_log_analysis(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel
 ) -> None:
@@ -384,7 +384,7 @@ def test_usb_boot_log_analysis(
         raise
 
 
-@pytest.mark.case_name("3.3. Flash image to DUT eMMC")
+@pytest.mark.case_name("2.3. Flash image to DUT eMMC")
 def test_flash_emmc(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel
 ) -> None:

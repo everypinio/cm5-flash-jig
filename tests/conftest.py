@@ -81,6 +81,7 @@ def set_hardpy_testplan_metadata(request: pytest.FixtureRequest):
         hardpy.set_dut_name(settings.HARDPY_DUT_NAME)
         hardpy.set_dut_type(settings.HARDPY_DUT_TYPE)
         hardpy.set_stand_name(settings.HARDPY_STAND_NAME)
+        hardpy.set_stand_location(settings.HARDPY_STAND_LOCATION)
 
     yield
 
