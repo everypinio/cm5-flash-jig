@@ -113,6 +113,15 @@ def _write_usb_boot_log(log_text: str) -> Path:
     return path.resolve()
 
 
+def _write_rpiboot_log(log_text: str) -> Path:
+    log_dir = Path(settings.DUT_USB_BOOT_LOG_DIR)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    path = log_dir / f"rpiboot_{stamp}.log"
+    path.write_text(log_text, encoding="utf-8", errors="replace")
+    return path.resolve()
+
+
 def _report_usb_boot_log(
     request: pytest.FixtureRequest,
     display: object,
@@ -303,10 +312,38 @@ def test_usb_boot_execution(
         if uart_capture is not None:
             boot_log = uart_capture.stop()
             uart_capture = None
-            
+
         UART_BOOT_LOG = boot_log
         RPIBOOT_OUTPUT = rpiboot_output
-        set_message(request, f"USB boot failed: {exc}", "USB boot")
+        try:
+            uart_log_path = _write_usb_boot_log(boot_log)
+            rpiboot_log_path = _write_rpiboot_log(rpiboot_output)
+        except Exception as log_exc:
+            log_details = f"\nFailed to persist diagnostic logs: {log_exc}"
+        else:
+            set_measurement(
+                request, "DUT USB boot failure UART log", str(uart_log_path)
+            )
+            set_measurement(
+                request, "DUT USB boot failure rpiboot log", str(rpiboot_log_path)
+            )
+            set_numeric_measurement(
+                request,
+                "DUT USB boot failure UART log bytes",
+                float(len(boot_log.encode("utf-8"))),
+                "B",
+            )
+            set_numeric_measurement(
+                request,
+                "DUT USB boot failure rpiboot log bytes",
+                float(len(rpiboot_output.encode("utf-8"))),
+                "B",
+            )
+            log_details = (
+                f"\nUART log: {uart_log_path}"
+                f"\nrpiboot log: {rpiboot_log_path}"
+            )
+        set_message(request, f"USB boot failed: {exc}{log_details}", "USB boot")
         raise
     finally:
         if uart_capture is not None:
