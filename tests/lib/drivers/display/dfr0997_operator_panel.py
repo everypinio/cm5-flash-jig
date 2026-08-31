@@ -1,5 +1,6 @@
 from dataclasses import field
 from pathlib import Path
+import textwrap
 import time
 
 from hardpy.pytest_hardpy.pytest_call import dataclass, sleep
@@ -24,6 +25,7 @@ class DFR0997OperatorPanel:
 
     display: DFR0997DisplayInterface
     terminal_max_lines: int = 8
+    terminal_max_chars: int = 24
     terminal_lines: list[str] = field(default_factory=list)
     terminal_title: str = "CM5 Flash JIG"
     logo_filename: Path = ASSETS_DATA_PATH / "everypin_logo.png"
@@ -86,21 +88,44 @@ class DFR0997OperatorPanel:
 
     def terminal_log(self, message: str) -> None:
         previous_line_count = len(self.terminal_lines)
-        self.terminal_lines.append(message)
+        message_lines = self._wrap_terminal_message(message)
+        self.terminal_lines.extend(message_lines)
         if len(self.terminal_lines) > self.terminal_max_lines:
             self.terminal_lines = self.terminal_lines[-self.terminal_max_lines :]
-            self._render_terminal()
+            if self.terminal_visible:
+                self._update_terminal_rows()
+            else:
+                self._render_terminal()
             return
 
         if (
             self.terminal_visible
             and self.terminal_rendered_lines == previous_line_count
         ):
-            self._draw_terminal_line(previous_line_count, message)
+            for offset, line in enumerate(message_lines):
+                self._draw_terminal_line(previous_line_count + offset, line)
             self.terminal_rendered_lines = len(self.terminal_lines)
             return
 
         self._render_terminal()
+
+    def _wrap_terminal_message(self, message: str) -> list[str]:
+        text = message.encode("ascii", errors="replace").decode("ascii")
+        content_width = max(1, self.terminal_max_chars - 2)
+        rendered_lines: list[str] = []
+
+        for source_line in text.splitlines() or [""]:
+            wrapped_lines = textwrap.wrap(
+                source_line,
+                width=content_width,
+                break_long_words=True,
+                break_on_hyphens=False,
+            ) or [""]
+            for wrapped_line in wrapped_lines:
+                prefix = "> " if not rendered_lines else "  "
+                rendered_lines.append(f"{prefix}{wrapped_line}")
+
+        return rendered_lines
 
     def terminal_restore(self) -> None:
         self._render_terminal()
@@ -117,10 +142,20 @@ class DFR0997OperatorPanel:
         self.terminal_visible = True
         self.terminal_rendered_lines = len(self.terminal_lines)
 
+    def _update_terminal_rows(self) -> None:
+        for index, line in enumerate(self.terminal_lines):
+            self._draw_terminal_line(index, line)
+        self.terminal_rendered_lines = len(self.terminal_lines)
+
     def _draw_terminal_line(self, index: int, line: str) -> None:
         y = 58 + index * 22
         self.display.text(
-            8, y, self._fit_text(f"> {line}"), size=1, color=BLACK, obj_id=10 + index
+            8,
+            y,
+            self._fit_text(line, self.terminal_max_chars),
+            size=1,
+            color=BLACK,
+            obj_id=10 + index,
         )
 
     def show_message(
