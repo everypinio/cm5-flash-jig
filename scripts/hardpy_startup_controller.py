@@ -394,7 +394,7 @@ def run_main_panel(startup_display: StartupDisplay) -> None:
 
 def main() -> int:
     startup_display = StartupDisplay()
-    startup_display.open(show_logo=True)
+    startup_display.open()
     panel: subprocess.Popen[bytes] | None = None
     stage = "Starting power-on panel"
     startup_display.log(stage)

@@ -2,7 +2,6 @@ import time
 
 import pytest
 
-from tests import ASSETS_DATA_PATH
 from tests.env import settings
 from tests.lib.drivers.jig_gpio import JigGPIOController
 from tests.lib.hardpy_helpers.messages import (
@@ -19,7 +18,6 @@ DUT_PRESENT_WAIT_MESSAGE = (
 )
 
 
-INSTALL_DUT_IMAGE = ASSETS_DATA_PATH / "put_dut_close_lid.png"
 DUT_WAIT_HEARTBEAT_S = 1.0
 DUT_WAIT_LOG_INTERVAL_S = 30.0
 
@@ -50,7 +48,7 @@ def _wait_for_dut_present(
         return True
 
     message = "Install Compute Module in JIG. Close the JIG lid."
-    set_operator_message(request, message, "Install DUT", image_path=INSTALL_DUT_IMAGE)
+    set_operator_message(request, message, "Install DUT")
     display.show_waiting_for_dut(0)
     set_measurement(request, "DUT_PRESENT initial", "HIGH")
 

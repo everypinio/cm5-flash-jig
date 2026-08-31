@@ -1,6 +1,7 @@
 [Unit]
 Description=CM5 power-on HardPy test
-Wants=cm5-couchdb.service
+Wants=cm5-startup-splash.service cm5-couchdb.service
+After=cm5-startup-splash.service
 ConditionPathExists=@REPO_DIR@/testplans/power_on
 
 [Service]

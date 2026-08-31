@@ -1,0 +1,20 @@
+[Unit]
+Description=CM5 jig early startup splash
+DefaultDependencies=no
+After=local-fs.target systemd-modules-load.service
+Before=sysinit.target cm5-power-on-test.service shutdown.target
+Conflicts=shutdown.target
+ConditionPathExists=@REPO_DIR@/.venv/bin/python
+ConditionPathExists=@REPO_DIR@/tests/assets/everypin_logo.png
+
+[Service]
+Type=oneshot
+User=@RUN_USER@
+SupplementaryGroups=i2c
+WorkingDirectory=@REPO_DIR@
+ExecStart=@REPO_DIR@/.venv/bin/python scripts/show_startup_splash.py
+TimeoutStartSec=5s
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

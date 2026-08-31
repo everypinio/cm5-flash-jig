@@ -14,8 +14,7 @@ from tests.lib.hardpy_helpers.messages import (
     set_operator_message,
 )
 from tests.lib.hardpy_helpers.reports import set_measurement, set_numeric_measurement
-from tests.lib.utils.dut_presence import wait_for_dut_not_present, wait_for_dut_present, INSTALL_DUT_IMAGE
-from tests.utils import image_path
+from tests.lib.utils.dut_presence import wait_for_dut_not_present, wait_for_dut_present
 
 POWER_LINE_SPECS = (
     ("DUT_5V", 5.0, "ADC_5V_CHANNEL", "ADC_5V_SCALE", "ADC_5V_MIN", "ADC_5V_MAX"),
