@@ -31,6 +31,7 @@ CMD_CLEAR = 0x1D
 CMD_BG_COLOR = 0x19
 MAX_EIO_RETRIES = 15
 EIO_RETRY_DELAY_S = 0.1
+RETRYABLE_I2C_ERRNOS = {errno.EIO, getattr(errno, "EREMOTEIO", 121)}
 
 
 class DFR0997I2CDisplay(DFR0997DisplayInterface):
@@ -60,7 +61,10 @@ class DFR0997I2CDisplay(DFR0997DisplayInterface):
                 self.bus.i2c_rdwr(i2c_msg.write(self.address, data))
                 break
             except OSError as exc:
-                if exc.errno != errno.EIO or attempt == MAX_EIO_RETRIES - 1:
+                if (
+                    exc.errno not in RETRYABLE_I2C_ERRNOS
+                    or attempt == MAX_EIO_RETRIES - 1
+                ):
                     raise
                 time.sleep(EIO_RETRY_DELAY_S)
         time.sleep(self.chunk_delay_s)
