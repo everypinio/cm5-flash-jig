@@ -34,13 +34,13 @@ setup_power_on_test
 
 if [ "$REBOOT_REQUIRED" -eq 1 ]; then
     if [ -t 0 ]; then
-        read -r -p "I2C and UART are configured. Reboot now? [y/N] " REBOOT_NOW
+        read -r -p "I2C, SPI and UART are configured. Reboot now? [y/N] " REBOOT_NOW
         if [[ "$REBOOT_NOW" =~ ^[Yy]$ ]]; then
             sudo reboot
         else
-            echo "Configuration will apply after the next reboot."
+            echo "I2C, SPI and UART configuration will apply after the next reboot."
         fi
     else
-        echo "I2C and UART are configured. Reboot the Raspberry Pi to apply them."
+        echo "I2C, SPI and UART are configured. Reboot the Raspberry Pi to apply them."
     fi
 fi

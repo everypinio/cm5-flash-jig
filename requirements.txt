@@ -1,6 +1,7 @@
 pytest
 pyvisa
 smbus2
+spidev
 hardpy
 pydantic-settings
 gpiozero

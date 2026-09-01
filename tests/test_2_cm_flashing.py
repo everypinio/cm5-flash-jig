@@ -51,7 +51,9 @@ USB_BOOT_MILESTONES = (
 )
 
 def _target_device_path() -> Path | None:
-    return settings.CM_FLASHER_DEVICE or DETECTED_DUT_DEVICE
+    if DETECTED_DUT_DEVICE:
+        return Path(DETECTED_DUT_DEVICE)
+    return settings.CM_FLASHER_DEVICE
 
 
 def _wait_for_new_disk_while_rpiboot_runs(
@@ -179,7 +181,7 @@ def _record_usb_boot_log(
 
 @pytest.mark.case_name("2.1. Execute USB boot")
 def test_usb_boot_execution(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, dut_power
 ) -> None:
     global DETECTED_DUT_DEVICE, UART_BOOT_LOG, RPIBOOT_OUTPUT
 
@@ -193,10 +195,8 @@ def test_usb_boot_execution(
     if not flasher:
         raise Exception("No Flasher module")
 
-    resource_name = settings.PWRBLOCK_RESOURCE
-    channel = settings.PWRBLOCK_CHANNEL
-    voltage = settings.PWRBLOCK_DUT_VOLTAGE or settings.PWRBLOCK_TEST_VOLTAGE
-    current = settings.PWRBLOCK_DUT_CURRENT or settings.PWRBLOCK_TEST_CURRENT
+    voltage = settings.DUT_POWER_NOMINAL_V
+    current = settings.DUT_POWER_CURRENT_LIMIT_A
     power_settle_s = settings.DUT_USB_BOOT_POWER_SETTLE_S
     uart_device = settings.CM_FLASHER_UART_DEVICE
     uart_baud = settings.CM_FLASHER_UART_BAUD
@@ -224,16 +224,16 @@ def test_usb_boot_execution(
             target = flasher.choose_existing_usb_disk(flasher.list_block_devices())
             target_path = target.path
         else:
-            if not getattr(settings, settings.PWRBLOCK_ENABLE_ENV):
+            if not settings.CM_FLASHER_ENABLE_POWER_WRITE:
                 fail_with_operator_message(
                     request,
-                    f"Set {settings.PWRBLOCK_ENABLE_ENV}=1 to allow this test to power-cycle DUT",
+                    "Set CM_FLASHER_ENABLE_POWER_WRITE=1 to allow this test to power-cycle DUT",
                     "USB boot",
                 )
 
-            power_block.set_supply(channel, "OFF")
-            set_measurement(request, "PowerBlock output before USB boot", "OFF")
-            display_panel.terminal_log("PowerBlock output OFF")
+            dut_power.disable()
+            set_measurement(request, "DUT power before USB boot", "OFF")
+            display_panel.terminal_log("DUT power OFF")
 
             assert wait_for_dut_present(request, display_panel, gpio_controller), (
                 f"DUT_PRESENT on GPIO{DUT_PRESENT} stayed HIGH after waiting for "
@@ -259,11 +259,10 @@ def test_usb_boot_execution(
             )
             display_panel.terminal_log("UART log capture")
             uart_capture = UartLogCapture(uart_device, uart_baud).start()
-            power_block.set_voltage(channel, voltage)
-            power_block.set_current(channel, current)
-            power_block.set_supply(channel, "ON")
-            set_measurement(request, "PowerBlock output during USB boot", "ON")
-            display_panel.terminal_log("PowerBlock output ON")
+            dut_power.prepare(voltage_v=voltage, current_limit_a=current)
+            dut_power.enable()
+            set_measurement(request, "DUT power during USB boot", "ON")
+            display_panel.terminal_log("DUT power ON")
             time.sleep(power_settle_s)
 
             if settings.MOCK_FLASHING:

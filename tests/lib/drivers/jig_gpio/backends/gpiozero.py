@@ -4,7 +4,7 @@ from gpiozero.pins.mock import MockFactory
 from tests.env import settings
 
 if settings.MOCK_GPIO:
-    Device.pin_factory = MockFactory
+    Device.pin_factory = MockFactory()
 
 
 class GpiozeroBackend:
@@ -18,8 +18,21 @@ class GpiozeroBackend:
         self._devices: dict[int, DigitalInputDevice | DigitalOutputDevice] = {}
 
     def setup_input(self, pin: int, *, pull: str | None) -> None:
-        pull_up = pull == "up"
-        self._devices[pin] = self._digital_input_device(pin, pull_up=pull_up)
+        if pull == "up":
+            pull_up: bool | None = True
+        elif pull == "down":
+            pull_up = False
+        elif pull is None:
+            pull_up = None
+        else:
+            raise ValueError(f"Unsupported GPIO pull mode: {pull}")
+        kwargs: dict[str, bool | None] = {"pull_up": pull_up}
+        if pull_up is None:
+            # gpiozero requires an explicit logical active level for a
+            # floating input. The backend reads pin.state directly, so this
+            # does not invert the raw electrical level.
+            kwargs["active_state"] = True
+        self._devices[pin] = self._digital_input_device(pin, **kwargs)
 
     def setup_output(self, pin: int, *, initial: bool) -> None:
         self._devices[pin] = self._digital_output_device(

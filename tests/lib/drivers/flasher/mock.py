@@ -5,8 +5,9 @@ from .models import BlockDevice
 
 
 def get_mock_block_device() -> BlockDevice:
+    path = settings.CM_FLASHER_DEVICE or Path("/dev/sda")
     return BlockDevice(
-        path=str(settings.CM_FLASHER_DEVICE),
+        path=str(path),
         name="mock_sda",
         kind="disk",
         removable=False,

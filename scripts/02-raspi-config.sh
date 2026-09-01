@@ -4,10 +4,13 @@ setup_raspi_config() {
     local uart_device
     local uart_tty
 
-    echo "Configuring Raspberry Pi hardware (I2C, Serial, Bluetooth)..."
+    echo "Configuring Raspberry Pi hardware (I2C, SPI, Serial, Bluetooth)..."
     if command -v raspi-config >/dev/null 2>&1; then
         echo " - Enabling I2C..."
         sudo raspi-config nonint do_i2c 0
+
+        echo " - Enabling SPI..."
+        sudo raspi-config nonint do_spi 0
 
         echo " - Disabling the login console on the DUT UART..."
         sudo raspi-config nonint do_serial_cons 1

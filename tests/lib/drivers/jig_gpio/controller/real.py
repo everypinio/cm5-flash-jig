@@ -1,4 +1,4 @@
-from ..constants import DUT_PRESENT, JIG_GPIO_CONFIG
+from ..constants import DUT_PRESENT, INA_ALERT, JIG_GPIO_CONFIG, OUT_EN
 from ..gpio import JigGPIO
 from ..interfaces import JigGPIOControllerInterface
 
@@ -44,3 +44,12 @@ class JigGPIOControllerImpl(JigGPIOControllerInterface):
 
     def read_pin(self, pin: int) -> bool:
         return self.gpio.read(pin)
+
+    def set_dut_power_enabled(self, enabled: bool) -> None:
+        self.gpio.write(OUT_EN, enabled)
+
+    def is_dut_power_enabled(self) -> bool:
+        return self.gpio.read(OUT_EN)
+
+    def is_dut_power_fault_active(self) -> bool:
+        return not self.gpio.read(INA_ALERT)

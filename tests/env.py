@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     CM_FLASHER_RPIBOOT_COMMAND: str = "rpiboot"
     CM_FLASHER_NO_RPIBOOT_SUDO: bool = False
     CM_FLASHER_RPIBOOT_DIR: Path | None = None
-    CM_FLASHER_UART_DEVICE: DevPath = Path("/dev/serial0")
+    CM_FLASHER_UART_DEVICE: DevPath = Path("/dev/ttyAMA0")
     CM_FLASHER_UART_BAUD: int = 115200
     CM_FLASHER_I2C_DEVICE: DevPath = Path("/dev/i2c-1")
     CM_FLASHER_DUT_PRESENT_TIMEOUT_S: float = 120.0
@@ -23,6 +23,26 @@ class Settings(BaseSettings):
     CM_FLASHER_DEVICE_POLL_S: float = 0.5
     CM_FLASHER_SKIP_RPIBOOT: bool = False
     CM_FLASHER_KEEP_MOUNTED: bool = False
+
+    # DUT power subsystem. The onboard backend drives GPIO20 and measures
+    # voltage/current with the INA229 fitted to the rev.2 main board.
+    DUT_POWER_BACKEND: str = "onboard_ina229"
+    DUT_POWER_NOMINAL_V: float = 5.0
+    DUT_POWER_CURRENT_LIMIT_A: float = 3.0
+    DUT_POWER_MIN_V: float = 4.75
+    DUT_POWER_MAX_V: float = 5.25
+    DUT_POWER_OFF_MAX_V: float = 0.5
+    DUT_POWER_IDLE_CURRENT_MAX_A: float = 0.1
+    DUT_POWER_ENABLE_GPIO: int = 20
+    DUT_POWER_ALERT_GPIO: int = 21
+
+    # INA229 SPI current/voltage monitor.
+    INA229_SPI_BUS: int = 0
+    INA229_SPI_DEVICE: int = 1
+    INA229_SPI_MAX_HZ: int = 1_000_000
+    INA229_SHUNT_OHMS: float = 0.01
+    INA229_ADC_RANGE: int = 0
+    INA229_CONVERSION_TIME_CODE: int = 3
 
     # PwrBlock settings for power smoke test.
     PWRBLOCK_CHANNEL: int = 0
@@ -57,9 +77,10 @@ class Settings(BaseSettings):
     ADC_1V8_MIN: float = 1.71
     ADC_1V8_MAX: float = 1.89
 
-    # Image and target disk used by flash dry-run tests.
+    # Image and optional fallback target disk. In production the target found
+    # after rpiboot takes precedence over this setting.
     CM_FLASHER_IMAGE: Path = Path.home() / "images" / "cm5-test.img.xz"
-    CM_FLASHER_DEVICE: DevPath = Path("/dev/sda")
+    CM_FLASHER_DEVICE: DevPath | None = None
 
     CM_FLASHER_GPIO_BACKEND: str | None = None
 
@@ -98,6 +119,7 @@ class Settings(BaseSettings):
     MOCK_GPIO: bool = False
     MOCK_FLASHING: bool = True
     MOCK_PWRBLOCK: bool = False
+    MOCK_INA229: bool = False
     MOCK_ADC: bool = False  # `True` is for dry lab runs
 
     # Optional: read from a .env file

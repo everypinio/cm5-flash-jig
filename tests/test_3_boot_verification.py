@@ -111,7 +111,7 @@ FATAL_MATCHES: list[str] = []
 
 @pytest.mark.case_name("3.1. Execute normal boot")
 def test_execute_normal_boot(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, dut_power
 ) -> None:
     global UART_BOOT_LOG_3, SAW_LOGIN, FATAL_MATCHES
 
@@ -121,9 +121,8 @@ def test_execute_normal_boot(
         "Boot check",
     )
 
-    channel = settings.PWRBLOCK_CHANNEL
-    voltage = settings.PWRBLOCK_DUT_VOLTAGE or settings.PWRBLOCK_TEST_VOLTAGE
-    current = settings.PWRBLOCK_DUT_CURRENT or settings.PWRBLOCK_TEST_CURRENT
+    voltage = settings.DUT_POWER_NOMINAL_V
+    current = settings.DUT_POWER_CURRENT_LIMIT_A
     boot_timeout_s = settings.DUT_BOOT_TIMEOUT_S
     uart_device = settings.CM_FLASHER_UART_DEVICE
     uart_baud = settings.CM_FLASHER_UART_BAUD
@@ -134,16 +133,16 @@ def test_execute_normal_boot(
     try:
         display_panel.terminal_start("Boot check")
 
-        if not getattr(settings, settings.PWRBLOCK_ENABLE_ENV):
+        if not settings.CM_FLASHER_ENABLE_POWER_WRITE:
             fail_with_operator_message(
                 request,
-                f"Set {settings.PWRBLOCK_ENABLE_ENV}=1 to allow this test to power-cycle DUT",
+                "Set CM_FLASHER_ENABLE_POWER_WRITE=1 to allow this test to power-cycle DUT",
                 "Boot check",
             )
 
-        power_block.set_supply(channel, "OFF")
-        set_measurement(request, "PowerBlock output before boot check", "OFF")
-        display_panel.terminal_log("PowerBlock output OFF")
+        dut_power.disable()
+        set_measurement(request, "DUT power before boot check", "OFF")
+        display_panel.terminal_log("DUT power OFF")
 
         uart_fd = open_uart(uart_device, uart_baud)
         set_measurement(request, "DUT UART device", str(uart_device))
@@ -159,10 +158,9 @@ def test_execute_normal_boot(
         set_measurement(request, "nRPI_BOOT", "HIGH")
         display_panel.terminal_log("nRPI_BOOT HIGH")
 
-        power_block.set_voltage(channel, voltage)
-        power_block.set_current(channel, current)
-        power_block.set_supply(channel, "ON")
-        display_panel.terminal_log("PowerBlock output ON")
+        dut_power.prepare(voltage_v=voltage, current_limit_a=current)
+        dut_power.enable()
+        display_panel.terminal_log("DUT power ON")
 
         assert uart_fd is not None
         UART_BOOT_LOG_3, SAW_LOGIN, FATAL_MATCHES = read_uart_boot_log(
@@ -184,7 +182,7 @@ def test_execute_normal_boot(
 
 @pytest.mark.case_name("3.2. Measure post-boot power")
 def test_measure_post_boot_power(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, dut_power
 ) -> None:
     set_message(
         request,
@@ -192,13 +190,12 @@ def test_measure_post_boot_power(
         "Boot check",
     )
 
-    channel = settings.PWRBLOCK_CHANNEL
     settle_s = settings.DUT_BOOT_POWER_SETTLE_S
 
     try:
         time.sleep(settle_s)
-        measured_voltage = power_block.get_voltage(channel)
-        measured_current = power_block.get_current(channel)
+        measured_voltage = dut_power.read_voltage()
+        measured_current = dut_power.read_current()
         set_numeric_measurement(
             request, "Boot check voltage", measured_voltage, "V"
         )
@@ -213,7 +210,7 @@ def test_measure_post_boot_power(
 
 @pytest.mark.case_name("3.3. Verify LED activity")
 def test_verify_led_activity(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController
 ) -> None:
     set_message(
         request,
@@ -221,7 +218,6 @@ def test_verify_led_activity(
         "Boot check",
     )
 
-    channel = settings.PWRBLOCK_CHANNEL
     activity_timeout_s = settings.DUT_BOOT_ACTIVITY_TIMEOUT_S
     activity_poll_s = settings.DUT_BOOT_ACTIVITY_POLL_S
     require_pwr_led = settings.DUT_BOOT_REQUIRE_LED_NPWR
@@ -267,7 +263,7 @@ def test_verify_led_activity(
 
 @pytest.mark.case_name("3.4. Analyze boot logs")
 def test_analyze_boot_log(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel
 ) -> None:
     set_message(
         request,
@@ -278,7 +274,6 @@ def test_analyze_boot_log(
     if UART_BOOT_LOG_3 is None:
         pytest.skip("No UART boot log available to analyze.")
 
-    channel = settings.PWRBLOCK_CHANNEL
     boot_timeout_s = settings.DUT_BOOT_TIMEOUT_S
     success_phrase = settings.DUT_BOOT_SUCCESS_PHRASE
 

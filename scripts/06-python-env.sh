@@ -7,5 +7,8 @@ setup_python_env() {
     fi
     
     source .venv/bin/activate
-    pip3 install -r requirements.txt
+    python -m pip install -r requirements.txt
+
+    echo "Checking Python access to the onboard SPI current monitor..."
+    python -c "import spidev; print('spidev import OK')"
 }

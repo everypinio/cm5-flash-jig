@@ -47,3 +47,15 @@ class JigGPIOControllerInterface(ABC):
     @abstractmethod
     def read_pin(self, pin: int) -> bool:
         """Read the raw state of a GPIO pin."""
+
+    @abstractmethod
+    def set_dut_power_enabled(self, enabled: bool) -> None:
+        """Drive the active-high OUT_EN signal for the DUT power switch."""
+
+    @abstractmethod
+    def is_dut_power_enabled(self) -> bool:
+        """Return the commanded OUT_EN state."""
+
+    @abstractmethod
+    def is_dut_power_fault_active(self) -> bool:
+        """Return True while the active-low INA_ALERT signal is asserted."""

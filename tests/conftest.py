@@ -113,18 +113,20 @@ def gpio_controller(request: pytest.FixtureRequest):
 
 
 @pytest.fixture(scope="session")
-def power_block(request: pytest.FixtureRequest):
-    from tests.imports import load_power_module
-    power_module = load_power_module(request)
-    if not power_module:
-        pytest.skip("No Power module available")
-    resource_name = settings.PWRBLOCK_RESOURCE
-    driver = power_module.PowerBlockDriver(resource_name=resource_name)
-    driver.connect()
+def dut_power(request: pytest.FixtureRequest, gpio_controller):
+    from tests.lib.drivers.dut_power import make_dut_power
+
     try:
-        yield driver
+        controller = make_dut_power(gpio_controller)
+        controller.connect()
+    except Exception as exc:
+        if _hardpy_enabled(request.config):
+            pytest.fail(f"DUT power subsystem is unavailable: {exc}")
+        pytest.skip(f"DUT power subsystem is unavailable: {exc}")
+    try:
+        yield controller
     finally:
-        driver.disconnect()
+        controller.disconnect()
 
 
 @pytest.fixture(scope="session")
@@ -150,16 +152,16 @@ def adc_reader(request: pytest.FixtureRequest):
 HOLD_POWER_KEY = pytest.StashKey[bool]()
 
 @pytest.fixture(scope="module", autouse=True)
-def _module_power_safety(power_block):
+def _module_power_safety(dut_power):
     """Safety net: Always turn off power at the end of the test module."""
     yield
     try:
-        power_block.set_supply(settings.PWRBLOCK_CHANNEL, "OFF")
+        dut_power.disable()
     except Exception:
         pass
 
 @pytest.fixture(scope="function", autouse=True)
-def _function_power_safety(request, power_block):
+def _function_power_safety(request, dut_power):
     """Safety net: Turn off power at the end of the test, unless held."""
     yield
     
@@ -173,6 +175,6 @@ def _function_power_safety(request, power_block):
         
     # 3. Default: Turn it off safely
     try:
-        power_block.set_supply(settings.PWRBLOCK_CHANNEL, "OFF")
+        dut_power.disable()
     except Exception:
         pass

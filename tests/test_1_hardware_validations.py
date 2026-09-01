@@ -43,23 +43,21 @@ def _record_powerblock_query(
 
 @pytest.mark.case_name("1.1. Verify DUT installation")
 def test_verify_dut_installation(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, dut_power
 ) -> None:
-    channel = settings.PWRBLOCK_CHANNEL
-
     display_panel.terminal_start("Install DUT")
-    display_panel.terminal_log("Switching PowerBlock off")
+    display_panel.terminal_log("Switching DUT power off")
     try:
-        power_block.set_supply(channel, "OFF")
+        dut_power.disable()
     except Exception as exc:
         fail_with_operator_message(
             request,
-            f"Could not switch PowerBlock output OFF before DUT install: {exc}",
+            f"Could not switch DUT power OFF before DUT install: {exc}",
             "Install DUT",
         )
     else:
-        set_measurement(request, "PowerBlock output before DUT install", "OFF")
-        display_panel.terminal_log("PowerBlock output OFF")
+        set_measurement(request, "DUT power before install", "OFF")
+        display_panel.terminal_log("DUT power OFF")
 
     assert gpio_controller.is_dut_present(), (
         f"DUT_PRESENT on GPIO{DUT_PRESENT} is HIGH although the controller "
@@ -70,7 +68,7 @@ def test_verify_dut_installation(
 
 @pytest.mark.case_name("1.2. Measure DUT power rails")
 def test_measure_dut_power_rails(
-    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, power_block, adc_reader
+    request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, dut_power, adc_reader
 ) -> None:
     set_message(
         request,
@@ -78,12 +76,10 @@ def test_measure_dut_power_rails(
         "Power lines",
     )
 
-    resource_name = settings.PWRBLOCK_RESOURCE
-    channel = settings.PWRBLOCK_CHANNEL
-    voltage = settings.PWRBLOCK_TEST_VOLTAGE or settings.PWRBLOCK_DUT_VOLTAGE
-    current = settings.PWRBLOCK_TEST_CURRENT or settings.PWRBLOCK_DUT_CURRENT
-    min_input_voltage = settings.PWRBLOCK_DUT_MIN_VOLTAGE
-    max_input_voltage = settings.PWRBLOCK_DUT_MAX_VOLTAGE
+    voltage = settings.DUT_POWER_NOMINAL_V
+    current = settings.DUT_POWER_CURRENT_LIMIT_A
+    min_input_voltage = settings.DUT_POWER_MIN_V
+    max_input_voltage = settings.DUT_POWER_MAX_V
     settle_s = settings.DUT_POWER_SETTLE_S
 
     use_adc_stub = settings.MOCK_ADC
@@ -96,47 +92,44 @@ def test_measure_dut_power_rails(
             f"{settings.CM_FLASHER_DUT_PRESENT_TIMEOUT_S} s"
         )
 
-        if not getattr(settings, settings.PWRBLOCK_ENABLE_ENV):
+        if not settings.CM_FLASHER_ENABLE_POWER_WRITE:
             fail_with_operator_message(
                 request,
-                f"Set {settings.PWRBLOCK_ENABLE_ENV}=1 to allow this test to power DUT",
+                "Set CM_FLASHER_ENABLE_POWER_WRITE=1 to allow this test to power DUT",
                 "Power lines",
             )
 
         display_panel.terminal_log("Powering DUT")
 
-        power_block.set_supply(channel, "OFF")
-        power_block.set_voltage(channel, voltage)
-        power_block.set_current(channel, current)
-        display_panel.terminal_log(f"Set {voltage:.2f} V / {current:.2f} A")
-        set_voltage = power_block.get_voltage_setpoint(channel)
-        set_numeric_measurement(
-            request, "DUT power voltage setpoint", set_voltage, "V"
-        )
-        if not min_input_voltage <= set_voltage <= max_input_voltage:
-            fail_with_operator_message(
-                request,
-                f"PowerBlock voltage setpoint is {set_voltage:.3f} V, expected "
-                f"{min_input_voltage:.3f}..{max_input_voltage:.3f} V. Output was not enabled.",
-                "Power lines",
-            )
+        dut_power.disable()
+        dut_power.prepare(voltage_v=voltage, current_limit_a=current)
+        set_measurement(request, "DUT power backend", dut_power.backend_name)
+        set_numeric_measurement(request, "DUT power nominal voltage", voltage, "V")
+        set_numeric_measurement(request, "DUT current limit", current, "A")
+        display_panel.terminal_log(f"Prepared {voltage:.2f} V / {current:.2f} A")
 
-        power_block.set_supply(channel, "ON")
-        display_panel.terminal_log("PowerBlock output ON")
+        dut_power.enable()
+        display_panel.terminal_log("DUT power ON")
         time.sleep(settle_s)
-        measured_input = power_block.get_voltage(channel)
-        measured_current = power_block.get_current(channel)
+        measured_input = dut_power.read_voltage()
+        measured_current = dut_power.read_current()
         set_numeric_measurement(
-            request, "PowerBlock DUT voltage", measured_input, "V"
+            request, "DUT input voltage", measured_input, "V"
         )
         set_numeric_measurement(
-            request, "PowerBlock DUT current", measured_current, "A"
+            request, "DUT input current", measured_current, "A"
         )
         if not min_input_voltage <= measured_input <= max_input_voltage:
             fail_with_operator_message(
                 request,
-                f"PowerBlock measured voltage {measured_input:.3f} V is outside "
+                f"DUT input voltage {measured_input:.3f} V is outside "
                 f"{min_input_voltage:.3f}..{max_input_voltage:.3f} V",
+                "Power lines",
+            )
+        if dut_power.has_fault():
+            fail_with_operator_message(
+                request,
+                f"DUT power subsystem reports a fault: {dut_power.diagnostics()}",
                 "Power lines",
             )
 
