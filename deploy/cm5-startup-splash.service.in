@@ -13,7 +13,9 @@ User=@RUN_USER@
 SupplementaryGroups=i2c
 WorkingDirectory=@REPO_DIR@
 ExecStart=@REPO_DIR@/.venv/bin/python scripts/show_startup_splash.py
+ExecStop=-@REPO_DIR@/.venv/bin/python scripts/show_shutdown_screen.py
 TimeoutStartSec=5s
+TimeoutStopSec=5s
 RemainAfterExit=yes
 
 [Install]
