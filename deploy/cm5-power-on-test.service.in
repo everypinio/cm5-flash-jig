@@ -1,0 +1,20 @@
+[Unit]
+Description=CM5 power-on HardPy test
+Wants=cm5-startup-splash.service cm5-couchdb.service
+After=cm5-startup-splash.service
+ConditionPathExists=@REPO_DIR@/testplans/power_on
+
+[Service]
+Type=simple
+User=@RUN_USER@
+WorkingDirectory=@REPO_DIR@
+RuntimeDirectory=cm5-power-on-test
+RuntimeDirectoryMode=0750
+ExecStart=/usr/bin/flock -n /run/cm5-power-on-test/test.lock "@REPO_DIR@/.venv/bin/python" scripts/hardpy_startup_controller.py
+EnvironmentFile=-@REPO_DIR@/.env
+TimeoutStartSec=30min
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
