@@ -73,7 +73,7 @@ Before production starts, the stand runs a self-test to confirm that the host, f
 ### Start the Stand
 
 1. Open the jig lid and make sure that no Compute Module is installed.
-2. Connect the USB-C 5 V / 3 A power supply to the USB-C power input on the rear panel.
+2. Connect the USB-C 5 V / 5 A power supply to the USB-C power input on the rear panel.
 3. Connect the power supply to mains power.
 4. The stand starts automatically when power is connected. Do not press the power button during a normal start-up.
 5. Wait while the host Raspberry Pi boots, HardPy starts, and the stand completes its automatic power-on self-test. Do not install a Compute Module during this phase.
