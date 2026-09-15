@@ -1,0 +1,32 @@
+title = "HardPy TOML config"
+tests_name = "CM5 flasher selftest"
+current_test_config = ""
+
+[database]
+storage_type = "json"
+storage_path = ".hardpy"
+
+[frontend]
+host = "0.0.0.0"
+port = 8000
+language = "en"
+full_size_button = false
+sound_on = false
+manual_collect = false
+measurement_display = true
+test_history = false
+
+[frontend.modal_result]
+enable = false
+auto_dismiss_pass = true
+auto_dismiss_timeout = 5
+
+[frontend.reports_storage_menu]
+show_standcloud = true
+check_standcloud = true
+
+[stand_cloud]
+address = "standcloud.everypin.io"
+connection_only = false
+autosync = true
+autosync_timeout = 30

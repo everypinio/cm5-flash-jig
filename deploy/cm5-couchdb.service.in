@@ -1,0 +1,16 @@
+[Unit]
+Description=CM5 CouchDB service for HardPy
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPO_DIR@
+ExecStart=/usr/bin/docker-compose up -d couchserver
+ExecStart=/bin/sh -c 'for attempt in $(seq 1 60); do /usr/bin/curl --fail --silent --show-error http://127.0.0.1:5984/_up >/dev/null && exit 0; sleep 1; done; echo "CouchDB did not become ready" >&2; exit 1'
+RemainAfterExit=yes
+TimeoutStartSec=90s
+
+[Install]
+WantedBy=multi-user.target
