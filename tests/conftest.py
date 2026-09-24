@@ -33,37 +33,40 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]):
         failed_display_step = item.name
 
 
-def _show_final_fail_on_display() -> None:
-    if failed_display_step is None:
-        return
-
-    with DFR0997Display() as display_driver:
-        display = DFR0997OperatorPanel(display=display_driver)
-        try:
-            display.show_fail(failed_display_step)
-        except Exception as exc:
-            print(f"Could not show final FAIL on DFR0997 display: {exc}")
-
-
-def _show_final_pass_on_display() -> None:
-    with DFR0997Display() as display_driver:
-        display = DFR0997OperatorPanel(display=display_driver)
-        try:
-            display.show_pass()
-        except Exception as exc:
-            print(f"Could not show final PASS on DFR0997 display: {exc}")
-
-
 def finish_executing():
-    if failed_display_step is None:
-        _show_final_pass_on_display()
-    else:
-        _show_final_fail_on_display()
+    # HardPy finalizes the report before post_run_functions and uploads it after.
+    # Use that same status: an interrupted run need not contain a failed test.
+    status = None
+    try:
+        report = hardpy.get_current_report()
+        if report is not None:
+            status = report.status
+    except Exception as exc:
+        print(f"Could not read final HardPy report: {exc}")
+
+    try:
+        with DFR0997Display() as display_driver:
+            display = DFR0997OperatorPanel(display=display_driver)
+            if status == "stopped":
+                display.show_stop()
+            elif status == "passed":
+                display.show_pass()
+            elif status == "failed":
+                display.show_fail(failed_display_step or "Test failed")
+            else:
+                # Never infer PASS (or STOP) from a missing/unfinished report.
+                label = getattr(status, "value", status) or "unknown"
+                display.show_message(str(label).upper(), "See HardPy report")
+    except Exception as exc:
+        # Display errors must not prevent HardPy's subsequent report upload.
+        print(f"Could not show final result on DFR0997 display: {exc}")
     print("Testing completed")
 
 
 @pytest.fixture(scope="session", autouse=True)
 def fill_actions_after_test(request: pytest.FixtureRequest):
+    global failed_display_step
+    failed_display_step = None
     try:
         post_run_functions = request.getfixturevalue("post_run_functions")
     except pytest.FixtureLookupError:

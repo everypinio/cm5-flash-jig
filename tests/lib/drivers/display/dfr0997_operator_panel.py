@@ -32,6 +32,7 @@ class DFR0997OperatorPanel:
     ready_filename: Path = ASSETS_DATA_PATH / "everypin_ready.png"
     remove_dut_filename: Path = ASSETS_DATA_PATH / "everypin_remove_dut.png"
     pass_filename: Path = ASSETS_DATA_PATH / "everypin_pass.png"
+    stop_filename: Path = ASSETS_DATA_PATH / "everypin_stop.png"
     fail_filename: Path = ASSETS_DATA_PATH / "everypin_fail.png"
     terminal_visible: bool = False
     terminal_rendered_lines: int = 0
@@ -215,6 +216,9 @@ class DFR0997OperatorPanel:
     def show_pass(self) -> None:
         self._show_background_image(self.pass_filename)
 
+    def show_stop(self) -> None:
+        self._show_background_image(self.stop_filename)
+
     def show_fail(self, reason: str = "Test failed") -> None:
         self._show_background_image(self.fail_filename)
         self.display.text(42, 142, "FAILED STEP", size=1, color=WHITE, obj_id=1)
@@ -236,6 +240,7 @@ def run_smoke_test() -> None:
             panel.show_ready,
             panel.show_flashing,
             panel.show_pass,
+            panel.show_stop,
             lambda: panel.show_fail("No boot"),
         ]
         for screen in screens:
