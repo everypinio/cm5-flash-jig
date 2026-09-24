@@ -44,6 +44,7 @@ class StartupDisplay:
         self._driver: Any | None = None
         self._panel: Any | None = None
         self._history: list[str] = []
+        self.last_run_status: str | None = None
 
     def open(
         self,
@@ -88,7 +89,9 @@ class StartupDisplay:
         if self._panel is None:
             return
         try:
-            self._panel.show_waiting_for_dut(elapsed_s)
+            self._panel.show_waiting_for_dut(
+                elapsed_s, last_run_status=self.last_run_status
+            )
         except Exception as exc:  # noqa: BLE001
             print(f"Ready display failed: {exc}", file=sys.stderr, flush=True)
             self.close()
@@ -381,6 +384,7 @@ def run_main_panel(startup_display: StartupDisplay) -> None:
                 print("Lid closed: main HardPy test started", flush=True)
 
                 report = wait_for_main_test(panel, monitor, previous_start_time)
+                startup_display.last_run_status = report.get("status")
                 print(
                     f"Main HardPy test finished with status: {report.get('status')}",
                     flush=True,

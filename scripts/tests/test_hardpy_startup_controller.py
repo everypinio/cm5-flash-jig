@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import Mock, patch
 
 from scripts import hardpy_startup_controller as controller
 
@@ -56,6 +57,18 @@ class RunningPanel:
 
 
 class StartupControllerTests(unittest.TestCase):
+    def test_previous_result_survives_display_close_and_reopen(self) -> None:
+        display = controller.StartupDisplay()
+        self.assertIsNone(display.last_run_status)
+        display.last_run_status = "stopped"
+        display.close()
+        panel = Mock()
+        with patch.object(display, "open", side_effect=lambda **kw: setattr(display, "_panel", panel)):
+            display.show_ready(0)
+            display.update_ready(12)
+        panel.show_waiting_for_dut.assert_called_once_with(0, last_run_status="stopped")
+        panel.update_waiting_for_dut.assert_called_once_with(12)
+
     def test_ready_waits_for_stable_lid_closure(self) -> None:
         clock = FakeClock()
         monitor = TimedPresenceMonitor(

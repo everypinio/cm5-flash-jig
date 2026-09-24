@@ -18,6 +18,13 @@ from tests.lib.drivers.display.dfr0997_display_mock import DFR0997MockDisplay
 
 DFR0997Display = DFR0997I2CDisplay if not settings.MOCK_DISPLAY else DFR0997MockDisplay
 
+# Background colors of the corresponding everypin_*.png result screens.
+READY_RESULT_STYLES = {
+    "passed": ("PASS", 0x78AD5C),
+    "failed": ("FAIL", 0xFF6669),
+    "stopped": ("STOP", 0xF2B24C),
+}
+
 
 @dataclass
 class DFR0997OperatorPanel:
@@ -36,6 +43,7 @@ class DFR0997OperatorPanel:
     fail_filename: Path = ASSETS_DATA_PATH / "everypin_fail.png"
     terminal_visible: bool = False
     terminal_rendered_lines: int = 0
+    last_run_status: str | None = None
 
     def _leave_terminal(self) -> None:
         self.terminal_visible = False
@@ -190,7 +198,10 @@ class DFR0997OperatorPanel:
     def show_ready(self) -> None:
         self._show_background_image(self.ready_filename)
 
-    def show_waiting_for_dut(self, elapsed_s: float = 0) -> None:
+    def show_waiting_for_dut(
+        self, elapsed_s: float = 0, *, last_run_status: str | None = None
+    ) -> None:
+        self.last_run_status = last_run_status
         self._show_background_image(self.ready_filename)
         self.update_waiting_for_dut(elapsed_s)
 
@@ -199,16 +210,27 @@ class DFR0997OperatorPanel:
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         spinner = "|/-\\"[total_seconds % 4]
-        status = f"WAIT {hours:02d}:{minutes:02d}:{seconds:02d} {spinner}"
+        elapsed = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         self.display.draw_rect(
-            58,
+            40,
             210,
-            204,
+            240,
             27,
             fill_color=WHITE,
             obj_id=90,
         )
-        self.display.text(78, 216, status, size=1, color=BLUE, obj_id=91)
+        if self.last_run_status is None:
+            self.display.text(
+                78, 216, f"WAIT {elapsed} {spinner}", size=1, color=BLUE, obj_id=91
+            )
+            return
+
+        label, color = READY_RESULT_STYLES.get(
+            self.last_run_status, ("????", BLUE)
+        )
+        self.display.text(46, 216, "LAST:", size=1, color=BLUE, obj_id=91)
+        self.display.text(118, 216, label, size=1, color=color, obj_id=92)
+        self.display.text(178, 216, elapsed, size=1, color=BLUE, obj_id=93)
 
     def show_flashing(self) -> None:
         self.terminal_log("FLASHING: writing image")
