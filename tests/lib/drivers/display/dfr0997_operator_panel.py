@@ -214,7 +214,7 @@ class DFR0997OperatorPanel:
         self.display.draw_rect(
             40,
             210,
-            240,
+            260,
             27,
             fill_color=WHITE,
             obj_id=90,
@@ -230,7 +230,7 @@ class DFR0997OperatorPanel:
         )
         self.display.text(46, 216, "LAST:", size=1, color=BLUE, obj_id=91)
         self.display.text(118, 216, label, size=1, color=color, obj_id=92)
-        self.display.text(178, 216, elapsed, size=1, color=BLUE, obj_id=93)
+        self.display.text(198, 216, elapsed, size=1, color=BLUE, obj_id=93)
 
     def show_flashing(self) -> None:
         self.terminal_log("FLASHING: writing image")

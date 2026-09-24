@@ -24,7 +24,7 @@ class OperatorPanelTerminalTests(unittest.TestCase):
                     [
                         call(46, 216, "LAST:", size=1, color=0x1565C0, obj_id=91),
                         call(118, 216, label, size=1, color=color, obj_id=92),
-                        call(178, 216, "01:01:01", size=1, color=0x1565C0, obj_id=93),
+                        call(198, 216, "01:01:01", size=1, color=0x1565C0, obj_id=93),
                     ],
                 )
                 display.background_image.assert_not_called()
