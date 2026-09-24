@@ -64,6 +64,9 @@ def _set_boot_log_artifact(
             "cm5_variant": variant_info,
             "log_path": str(log_path),
             "log_text": log_text,
+            "uart_device": str(settings.CM_FLASHER_UART_DEVICE),
+            "uart_baud": settings.CM_FLASHER_UART_BAUD,
+            "log_bytes": len(log_text.encode("utf-8")),
         }
     )
 
@@ -106,6 +109,7 @@ def _wait_for_active_low_led(
 
 
 UART_BOOT_LOG_3: str | None = None
+UART_BOOT_LOG_PATH: Path | None = None
 SAW_LOGIN: bool = False
 FATAL_MATCHES: list[str] = []
 
@@ -113,7 +117,11 @@ FATAL_MATCHES: list[str] = []
 def test_execute_normal_boot(
     request: pytest.FixtureRequest, display_panel: DFR0997OperatorPanel, gpio_controller: JigGPIOController, dut_power
 ) -> None:
-    global UART_BOOT_LOG_3, SAW_LOGIN, FATAL_MATCHES
+    global UART_BOOT_LOG_3, UART_BOOT_LOG_PATH, SAW_LOGIN, FATAL_MATCHES
+    UART_BOOT_LOG_3 = None
+    UART_BOOT_LOG_PATH = None
+    SAW_LOGIN = False
+    FATAL_MATCHES = []
 
     set_message(
         request,
@@ -171,7 +179,19 @@ def test_execute_normal_boot(
             request=request,
         )
 
-        display_panel.terminal_log("Boot sequence captured")
+        # Persist in 3.1 as well: later critical power/LED checks may skip 3.4.
+        UART_BOOT_LOG_PATH = write_boot_log(UART_BOOT_LOG_3)
+        _set_boot_log_artifact(
+            request, log_text=UART_BOOT_LOG_3, log_path=UART_BOOT_LOG_PATH,
+            boot_info=parse_boot_info(UART_BOOT_LOG_3),
+            variant_info=infer_cm5_part_number(UART_BOOT_LOG_3),
+            saw_login=SAW_LOGIN, fatal_matches=FATAL_MATCHES,
+            success_phrase=success_phrase, timeout_s=boot_timeout_s,
+        )
+        set_measurement(request, "DUT boot log path", str(UART_BOOT_LOG_PATH))
+        byte_count = len(UART_BOOT_LOG_3.encode("utf-8"))
+        set_numeric_measurement(request, "DUT boot log bytes", float(byte_count), "B")
+        display_panel.terminal_log(f"UART captured: {byte_count} B")
     except Exception as exc:
         set_message(request, f"Boot execution failed: {exc}", "Boot check")
         raise
@@ -278,7 +298,7 @@ def test_analyze_boot_log(
     success_phrase = settings.DUT_BOOT_SUCCESS_PHRASE
 
     try:
-        log_path = write_boot_log(UART_BOOT_LOG_3)
+        log_path = UART_BOOT_LOG_PATH or write_boot_log(UART_BOOT_LOG_3)
         boot_info = parse_boot_info(UART_BOOT_LOG_3)
         variant_info = infer_cm5_part_number(UART_BOOT_LOG_3)
         _set_boot_dut_info(request, boot_info, variant_info)
@@ -313,8 +333,13 @@ def test_analyze_boot_log(
 
         if not SAW_LOGIN:
             details = ""
+            if not UART_BOOT_LOG_3:
+                details = (
+                    f" UART received 0 bytes on {settings.CM_FLASHER_UART_DEVICE}"
+                    f" at {settings.CM_FLASHER_UART_BAUD} baud."
+                )
             if FATAL_MATCHES:
-                details = " Fatal marker(s): " + ", ".join(FATAL_MATCHES)
+                details += " Fatal marker(s): " + ", ".join(FATAL_MATCHES)
             fail_with_operator_message(
                 request,
                 f"DUT did not reach {success_phrase!r} within {boot_timeout_s:.1f} s.{details}",

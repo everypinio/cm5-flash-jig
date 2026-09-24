@@ -454,6 +454,16 @@ def test_flash_emmc(
         display_panel.terminal_log("Writing image")
         flasher.write_image(image, target, dry_run=False)
         set_measurement(request, "image write", "completed")
+        if not settings.MOCK_FLASHING:
+            from tests.lib.drivers.flasher.boot_config import configure_cm4_uart
+
+            display_panel.terminal_log("Configuring CM4 UART")
+            boot_partition = configure_cm4_uart(target)
+            set_measurement(request, "UART boot partition", boot_partition)
+            set_measurement(
+                request, "CM4 UART configuration",
+                "enable_uart=1; disable-bt; uart_2ndstage=1; console=serial0,115200",
+            )
         display_panel.terminal_log("Write completed")
     except Exception as exc:
         set_message(request, f"Image write failed: {exc}", "Flash image")
