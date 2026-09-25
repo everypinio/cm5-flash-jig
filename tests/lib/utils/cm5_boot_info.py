@@ -1,4 +1,4 @@
-"""Parse Raspberry Pi CM5 boot logs into DUT metadata."""
+"""Parse Raspberry Pi CM4/CM5 boot logs into DUT metadata."""
 
 from __future__ import annotations
 
@@ -156,7 +156,13 @@ def infer_wireless(log_text: str) -> tuple[bool | None, str]:
     return None, "unknown"
 
 
-def infer_cm5_part_number(log_text: str) -> dict[str, Any]:
+def infer_cm_part_number(log_text: str) -> dict[str, Any]:
+    # Require the model reported by this DUT; never default an unknown board to CM5.
+    model = parse_boot_info(log_text).get("MODEL", "")
+    match = re.fullmatch(
+        r"Raspberry Pi Compute Module ([45])(?: Rev [0-9.]+)?", model
+    )
+    family = f"CM{match.group(1)}" if match else None
     ram_gb = infer_ram_gb(log_text)
     emmc_gb = infer_emmc_gb(log_text)
     wireless, wireless_confidence = infer_wireless(log_text)
@@ -167,13 +173,14 @@ def infer_cm5_part_number(log_text: str) -> dict[str, Any]:
     part_number = None
     part_number_confidence = "incomplete"
 
-    if wireless_code is not None and ram_code and emmc_code:
-        part_number = f"CM5{wireless_code}{ram_code}{emmc_code}"
+    if family and wireless_code is not None and ram_code and emmc_code:
+        part_number = f"{family}{wireless_code}{ram_code}{emmc_code}"
         part_number_confidence = (
             "probable" if wireless_confidence.startswith("probable") else "inferred"
         )
 
     return {
+        "module_family": family,
         "part_number": part_number,
         "part_number_source": "inferred_from_boot_log",
         "part_number_confidence": part_number_confidence,
@@ -185,3 +192,8 @@ def infer_cm5_part_number(log_text: str) -> dict[str, Any]:
         "emmc_gb": emmc_gb,
         "emmc_code": emmc_code,
     }
+
+
+def infer_cm5_part_number(log_text: str) -> dict[str, Any]:
+    """Compatibility name for callers predating CM4 support."""
+    return infer_cm_part_number(log_text)

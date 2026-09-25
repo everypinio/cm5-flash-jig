@@ -22,7 +22,7 @@ from tests.lib.hardpy_helpers.reports import set_measurement, set_numeric_measur
 from tests.lib.hardpy_helpers.utils import _hardpy_enabled
 from tests.lib.utils.cm5_boot_info import (
     DUT_INFO_FIELDS,
-    infer_cm5_part_number,
+    infer_cm_part_number,
     parse_boot_info,
 )
 from tests.lib.utils.dut_presence import wait_for_dut_present
@@ -145,7 +145,7 @@ def _record_usb_boot_log(
 ) -> tuple[Path, dict[str, str], dict[str, object]]:
     log_path = _write_usb_boot_log(log_text)
     boot_info = parse_boot_info(log_text)
-    variant_info = infer_cm5_part_number(log_text)
+    variant_info = infer_cm_part_number(log_text)
 
     if _hardpy_enabled(request):
         import hardpy

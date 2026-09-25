@@ -1,4 +1,4 @@
-"""Record parsed CM5 DUT metadata in HardPy without duplicating identity fields."""
+"""Record parsed CM4/CM5 DUT metadata in HardPy without duplicating identity fields."""
 
 from __future__ import annotations
 
@@ -46,6 +46,7 @@ def build_dut_info_payload(
     }
     payload.update(
         {
+            "module_family": variant_info.get("module_family"),
             "cm5_ram_gb": variant_info.get("ram_gb"),
             "cm5_emmc_gb": variant_info.get("emmc_gb"),
             "cm5_wireless": variant_info.get("wireless"),

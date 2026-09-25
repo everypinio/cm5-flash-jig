@@ -25,7 +25,7 @@ from tests.lib.utils.bootlog import (
 )
 from tests.lib.utils.cm5_boot_info import (
     DUT_INFO_FIELDS,
-    infer_cm5_part_number,
+    infer_cm_part_number,
     parse_boot_info,
 )
 from tests.lib.utils.dut_presence import wait_for_dut_present
@@ -184,7 +184,7 @@ def test_execute_normal_boot(
         _set_boot_log_artifact(
             request, log_text=UART_BOOT_LOG_3, log_path=UART_BOOT_LOG_PATH,
             boot_info=parse_boot_info(UART_BOOT_LOG_3),
-            variant_info=infer_cm5_part_number(UART_BOOT_LOG_3),
+            variant_info=infer_cm_part_number(UART_BOOT_LOG_3),
             saw_login=SAW_LOGIN, fatal_matches=FATAL_MATCHES,
             success_phrase=success_phrase, timeout_s=boot_timeout_s,
         )
@@ -300,7 +300,7 @@ def test_analyze_boot_log(
     try:
         log_path = UART_BOOT_LOG_PATH or write_boot_log(UART_BOOT_LOG_3)
         boot_info = parse_boot_info(UART_BOOT_LOG_3)
-        variant_info = infer_cm5_part_number(UART_BOOT_LOG_3)
+        variant_info = infer_cm_part_number(UART_BOOT_LOG_3)
         _set_boot_dut_info(request, boot_info, variant_info)
         _set_boot_log_artifact(
             request,
